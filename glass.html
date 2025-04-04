@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Webcam</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .webcam-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .webcam-view {
+            position: absolute;
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            filter: grayscale(100%);
+            opacity: 0.2;
+            transform: scaleX(-1);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+
+        .glass-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Assets/glass.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            cursor: url('Assets/hammer.png'), auto;
+        }
+
+        .glasscutter {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 150px;
+            height: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .shatter-effect {
+            animation: shatter 0.5s ease-out forwards;
+        }
+
+        @keyframes shatter {
+            0% {
+                transform: scaleX(-1) scale(1) translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scaleX(-1) scale(1) translate(var(--displaceX), var(--displaceY)) rotate(var(--rotate));
+                opacity: 0.2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="webcam-container" id="webcamContainer"></div>
+    <div class="glass-overlay" id="glassOverlay"></div>
+    <a href="index.html">
+        <img src="Assets/glasscutter.png" alt="Glasscutter" class="glasscutter">
+    </a>
+
+    <script>
+        var webcamContainer = document.querySelector("#webcamContainer");
+        var glassOverlay = document.querySelector("#glassOverlay");
+        var currentGlassIndex = 1;
+        var glassImages = [
+            'Assets/glass.png',
+            'Assets/glass2.png',
+            'Assets/glass3.png',
+            'Assets/glass4.png'
+        ];
+        var glassSounds = [
+            'Assets/glass1.mp3',
+            'Assets/glass2.mp3',
+            'Assets/glass3.mp3',
+            'Assets/glass4.mp3'
+        ];
+
+        // Function to generate random position and rotation
+        function getRandomPosition() {
+            return {
+                x: Math.random() * (window.innerWidth - 200),
+                y: Math.random() * (window.innerHeight - 150),
+                rotate: (Math.random() - 0.5) * 30
+            };
+        }
+
+        // Function to generate random polygon points
+        function generateRandomPolygon() {
+            const points = [];
+            const numPoints = 5 + Math.floor(Math.random() * 4); // 5-8 points
+            const centerX = 100;
+            const centerY = 75;
+            const radius = 80;
+
+            for (let i = 0; i < numPoints; i++) {
+                const angle = (i / numPoints) * Math.PI * 2;
+                const randomRadius = radius * (0.7 + Math.random() * 0.6); // 70-130% of radius
+                const x = centerX + randomRadius * Math.cos(angle);
+                const y = centerY + randomRadius * Math.sin(angle);
+                points.push(`${x}px ${y}px`);
+            }
+
+            return `polygon(${points.join(', ')})`;
+        }
+
+        // Function to play sound
+        function playSound() {
+            var soundIndex = Math.floor(Math.random() * glassSounds.length);
+            var audio = new Audio(glassSounds[soundIndex]);
+            
+            audio.addEventListener('error', function(e) {
+                console.error('Error loading sound:', e);
+            });
+            
+            audio.addEventListener('canplaythrough', function() {
+                console.log('Sound loaded and ready to play');
+            });
+            
+            var playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    console.log('Sound playing successfully');
+                }).catch(function(error) {
+                    console.error('Error playing sound:', error);
+                });
+            }
+        }
+
+        // Function to create new webcam view
+        function createWebcamView(stream) {
+            const video = document.createElement('video');
+            video.className = 'webcam-view';
+            video.autoplay = true;
+            
+            const position = getRandomPosition();
+            video.style.left = `${position.x}px`;
+            video.style.top = `${position.y}px`;
+            video.style.setProperty('--rotate', `${position.rotate}deg`);
+            video.style.clipPath = generateRandomPolygon();
+            
+            // Set the video source
+            video.srcObject = stream;
+            
+            webcamContainer.appendChild(video);
+            
+            // Add shatter effect
+            video.classList.add('shatter-effect');
+            setTimeout(() => {
+                video.classList.remove('shatter-effect');
+            }, 500);
+        }
+
+        // Function to change glass image and add new webcam view
+        function changeGlass() {
+            currentGlassIndex = (currentGlassIndex + 1) % glassImages.length;
+            glassOverlay.style.backgroundImage = `url('${glassImages[currentGlassIndex]}')`;
+            playSound();
+            
+            // Get the stream from the first video element
+            const firstVideo = webcamContainer.firstChild;
+            if (firstVideo && firstVideo.srcObject) {
+                createWebcamView(firstVideo.srcObject);
+            }
+        }
+
+        // Add click event listener
+        glassOverlay.addEventListener('click', changeGlass);
+
+        // Initialize first webcam
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    console.log("Webcam stream is active");
+                    createWebcamView(stream);
+                })
+                .catch(function (err) {
+                    console.log("sorry, webcam not working :( " + err);
+                });
+        } else {
+            console.log("webcam not supported :(");
+        }
+    </script>
+</body>
+</html>

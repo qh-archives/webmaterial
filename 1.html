@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 1</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            /* Allow scrolling */
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        .img-magnifier-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        #marbleImg {
+            width: 100%;
+            /* Make the image taller than viewport to enable scrolling */
+            height: 200vh; /* 200% of viewport height */
+            object-fit: cover;
+            display: block;
+        }
+        
+        /* Chizel image styling */
+        .chizel-image {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 200px; /* Increased from 150px to 200px */
+            height: auto;
+            z-index: 20; /* Make sure it's above other elements */
+            cursor: pointer; /* Add a pointer cursor to indicate it's clickable */
+        }
+        
+        /* Style for chizel link wrapper */
+        .chizel-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+            display: block;
+            width: 200px; /* Adjusted to match new image width */
+        }
+        
+        /* Style for the magnifying glass */
+        .img-magnifier-glass {
+            position: absolute;
+            border: none; /* Remove border */
+            border-radius: 50%;
+            cursor: none;
+            /*Set the size of the magnifier glass:*/
+            width: 150px;
+            height: 150px;
+            /* Add subtle shadow for depth */
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Hidden text styling - positioned at a specific spot to find */
+        .hidden-text {
+            position: absolute;
+            width: 20%; /* Narrower width for a chunk appearance */
+            font-size: 14px; /* Smaller font for more compact look */
+            line-height: 1.4;
+            padding: 8px;
+            text-align: left; /* Left align for a more natural look */
+            /* Very subtle nude/beige color that blends with marble */
+            color: rgba(210, 200, 190, 0.08);
+            font-family: serif;
+            font-weight: normal;
+            /* Very subtle shadow to match marble texture */
+            text-shadow: 0.5px 0.5px 1px rgba(180, 170, 160, 0.1);
+            pointer-events: none; /* Prevent text from interfering with mouse events */
+            z-index: 5;
+        }
+        
+        /* First hidden text position */
+        .hidden-text-1 {
+            /* Position text at a specific spot to search for */
+            top: 75%;
+            left: 20%;
+        }
+        
+        /* Second hidden text position */
+        .hidden-text-2 {
+            /* Position text at the top middle of the screen */
+            top: 10%;
+            left: 40%;
+            /* Make slightly more visible for easier discovery */
+            color: rgba(210, 200, 190, 0.1);
+        }
+        
+        /* New hidden text positions - randomly placed */
+        .hidden-text-3 {
+            top: 25%;
+            left: 15%;
+        }
+        
+        .hidden-text-4 {
+            top: 50%;
+            left: 60%;
+        }
+        
+        .hidden-text-5 {
+            top: 40%;
+            left: 30%;
+        }
+        
+        .hidden-text-6 {
+            top: 85%;
+            left: 45%;
+        }
+        
+        .hidden-text-7 {
+            top: 15%;
+            left: 70%;
+        }
+        
+        .hidden-text-8 {
+            top: 60%;
+            left: 10%;
+        }
+        
+        .hidden-text-9 {
+            top: 35%;
+            left: 75%;
+        }
+        
+        .hidden-text-10 {
+            top: 90%;
+            left: 65%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Chizel image in top left corner -->
+    <a href="index.html" class="chizel-link">
+        <img src="Assets/chizel.png" alt="Chizel" class="chizel-image">
+    </a>
+    
+    <div class="img-magnifier-container">
+        <img id="marbleImg" src="Assets/marble.jpg" alt="Marble Background">
+        <!-- First hidden text layer -->
+        <div class="hidden-text hidden-text-1">
+            Rocks are made up of minerals<br>
+            and can be classified into<br>
+            three main types:<br>
+            - igneous<br>
+            - sedimentary<br>
+            - metamorphic
+        </div>
+        
+        <!-- Second hidden text layer -->
+        <div class="hidden-text hidden-text-2">
+            The Earth's crust is<br>
+            composed mainly of<br>
+            igneous rocks.
+        </div>
+        
+        <!-- New hidden text layers -->
+        <div class="hidden-text hidden-text-3">
+            Granite is a common<br>
+            example of an<br>
+            igneous rock.
+        </div>
+        
+        <div class="hidden-text hidden-text-4">
+            Sedimentary rocks like<br>
+            sandstone are formed by<br>
+            the accumulation of sediments.
+        </div>
+        
+        <div class="hidden-text hidden-text-5">
+            Metamorphic rocks, like<br>
+            marble, form under<br>
+            heat and pressure.
+        </div>
+        
+        <div class="hidden-text hidden-text-6">
+            The hardest natural<br>
+            rock is diamond, which<br>
+            is a form of carbon.
+        </div>
+        
+        <div class="hidden-text hidden-text-7">
+            The Grand Canyon is<br>
+            primarily made of<br>
+            sedimentary rock layers.
+        </div>
+        
+        <div class="hidden-text hidden-text-8">
+            Some rocks, like basalt,<br>
+            cool quickly and have<br>
+            small crystals.
+        </div>
+        
+        <div class="hidden-text hidden-text-9">
+            Fossils are typically<br>
+            found in sedimentary rocks.
+        </div>
+        
+        <div class="hidden-text hidden-text-10">
+            Volcanic rocks like pumice<br>
+            can float on water due<br>
+            to air pockets inside.
+        </div>
+    </div>
+    
+    <script>
+        // Magnifier glass function
+        function magnify(imgID, zoom) {
+            var img, glass, w, h, bw;
+            img = document.getElementById(imgID);
+            var chizelLink = document.querySelector('.chizel-link');
+
+            /* Create magnifier glass: */
+            glass = document.createElement("DIV");
+            glass.setAttribute("class", "img-magnifier-glass");
+            glass.style.display = "none"; // Initially hide the magnifying glass
+
+            /* Insert magnifier glass: */
+            img.parentElement.insertBefore(glass, img);
+
+            /* Set background properties for the magnifier glass: */
+            glass.style.backgroundImage = "url('" + img.src + "')";
+            glass.style.backgroundRepeat = "no-repeat";
+            glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+            bw = 0; // No border width
+            w = glass.offsetWidth / 2;
+            h = glass.offsetHeight / 2;
+
+            // Reference to all hidden text elements
+            var hiddenTexts = document.querySelectorAll('.hidden-text');
+            
+            /* Execute a function when someone moves the mouse over the image: */
+            img.addEventListener("mousemove", moveMagnifier);
+            img.addEventListener("mouseenter", showMagnifier);
+            img.addEventListener("mouseleave", hideMagnifier);
+
+            /*and also for touch screens:*/
+            img.addEventListener("touchmove", moveMagnifier);
+            
+            // Function to show magnifier if not over chizel
+            function showMagnifier(e) {
+                // Check if the mouse is over the chizel
+                var chizelRect = chizelLink.getBoundingClientRect();
+                if (!(e.clientX >= chizelRect.left && e.clientX <= chizelRect.right && 
+                      e.clientY >= chizelRect.top && e.clientY <= chizelRect.bottom)) {
+                    glass.style.display = "block";
+                }
+            }
+            
+            // Function to hide magnifier
+            function hideMagnifier() {
+                glass.style.display = "none";
+            }
+            
+            function moveMagnifier(e) {
+                var pos, x, y;
+                /* Prevent any other actions that may occur when moving over the image */
+                e.preventDefault();
+                
+                // Check if the mouse is over the chizel
+                var chizelRect = chizelLink.getBoundingClientRect();
+                if (e.clientX >= chizelRect.left && e.clientX <= chizelRect.right && 
+                    e.clientY >= chizelRect.top && e.clientY <= chizelRect.bottom) {
+                    glass.style.display = "none";
+                    return; // Exit the function if over the chizel
+                } else {
+                    glass.style.display = "block";
+                }
+                
+                /* Get the cursor's x and y positions: */
+                pos = getCursorPos(e);
+                x = pos.x;
+                y = pos.y;
+                /* Prevent the magnifier glass from being positioned outside the image: */
+                if (x > img.width - (w / zoom)) {x = img.width - (w / zoom);}
+                if (x < w / zoom) {x = w / zoom;}
+                if (y > img.height - (h / zoom)) {y = img.height - (h / zoom);}
+                if (y < h / zoom) {y = h / zoom;}
+                /* Set the position of the magnifier glass: */
+                glass.style.left = (x - w) + "px";
+                glass.style.top = (y - h) + "px";
+                /* Display what the magnifier glass "sees": */
+                glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+                
+                // Check if the magnifying glass is over any of the hidden text areas
+                var glassRect = glass.getBoundingClientRect();
+                var glassCenterX = glassRect.left + glassRect.width / 2;
+                var glassCenterY = glassRect.top + glassRect.height / 2;
+                
+                // Loop through all hidden texts
+                hiddenTexts.forEach(function(hiddenText) {
+                    var textRect = hiddenText.getBoundingClientRect();
+                    
+                    if (glassCenterX >= textRect.left && glassCenterX <= textRect.right &&
+                        glassCenterY >= textRect.top && glassCenterY <= textRect.bottom) {
+                        // The glass is over the text, make it visible
+                        hiddenText.style.color = 'rgba(100, 80, 70, 0.7)'; // Darker nude/brown color
+                        hiddenText.style.textShadow = '0.5px 0.5px 1px rgba(50, 30, 20, 0.3)';
+                    } else {
+                        // Reset text to be hidden when glass moves away
+                        if (hiddenText.classList.contains('hidden-text-2')) {
+                            hiddenText.style.color = 'rgba(210, 200, 190, 0.1)';
+                        } else {
+                            hiddenText.style.color = 'rgba(210, 200, 190, 0.08)';
+                        }
+                        hiddenText.style.textShadow = '0.5px 0.5px 1px rgba(180, 170, 160, 0.1)';
+                    }
+                });
+            }
+
+            function getCursorPos(e) {
+                var a, x = 0, y = 0;
+                e = e || window.event;
+                /* Get the x and y positions of the image: */
+                a = img.getBoundingClientRect();
+                /* Calculate the cursor's x and y coordinates, relative to the image: */
+                x = e.pageX - a.left;
+                y = e.pageY - a.top;
+                /* Consider any page scrolling: */
+                x = x - window.pageXOffset;
+                y = y - window.pageYOffset;
+                return {x : x, y : y};
+            }
+        }
+
+        // Execute the magnify function when the page loads
+        window.onload = function() {
+            // Magnify the image with ID "marbleImg" with zoom level 3
+            magnify("marbleImg", 3);
+        };
+    </script>
+</body>
+</html> 

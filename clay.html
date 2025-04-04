@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay Drawing</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #271505;
+        }
+
+        body {
+            background-image: url('Assets/clay.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            cursor: grab;
+        }
+
+        #drawingCanvas:active {
+            cursor: grabbing;
+        }
+
+        .clay-utensils {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 150px;
+            height: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        #clearButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4FA4F7, #2B7CD9);
+            border: none;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            cursor: pointer;
+            z-index: 1000;
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #clearButton::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        #clearButton:hover {
+            transform: rotate(45deg) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #clearButton:active {
+            transform: rotate(45deg) scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="drawingCanvas"></canvas>
+    <a href="index.html">
+        <img src="Assets/clay utensils.png" alt="Clay Utensils" class="clay-utensils">
+    </a>
+    <button id="clearButton" title="Clear Drawing"></button>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const clearButton = document.getElementById('clearButton');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Drawing settings
+        ctx.lineWidth = 15;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#8B4513'; // Saddle brown color for clay-like appearance
+
+        // Drawing functions
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.clientX, e.clientY];
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            // Add some randomness to the line width for texture
+            ctx.lineWidth = 15 + Math.random() * 5;
+
+            // Create gradient for clay-like effect
+            const gradient = ctx.createLinearGradient(lastX, lastY, e.clientX, e.clientY);
+            gradient.addColorStop(0, '#8B4513'); // Saddle brown
+            gradient.addColorStop(1, '#A0522D'); // Sienna
+            ctx.strokeStyle = gradient;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.clientX, e.clientY);
+            ctx.stroke();
+
+            [lastX, lastY] = [e.clientX, e.clientY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Clear canvas with water effect
+        clearButton.addEventListener('click', () => {
+            // Add a ripple effect
+            clearButton.style.transform = 'rotate(45deg) scale(0.95)';
+            setTimeout(() => {
+                clearButton.style.transform = 'rotate(45deg) scale(1)';
+            }, 100);
+
+            // Clear the canvas with a fade effect
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'source-over';
+        });
+    </script>
+</body>
+</html>

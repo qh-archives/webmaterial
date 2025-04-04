@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copper Surface</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            cursor: crosshair;
+        }
+        
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Assets/copper.jpeg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        /* Blowtorch image */
+        .blowtorch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+            z-index: 2;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Interactive area for events */
+        .interactive-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Rust overlay container */
+        .rust-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Individual rust spots */
+        .rust-spot {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at 30% 30%, 
+                rgba(139, 69, 19, 0.7) 0%, 
+                rgba(165, 42, 42, 0.5) 30%, 
+                rgba(210, 105, 30, 0.3) 60%,
+                rgba(139, 69, 19, 0) 100%
+            );
+            mix-blend-mode: multiply;
+            opacity: 0;
+            transition: transform 6s ease-out, opacity 4s ease-in;
+            pointer-events: none;
+            filter: blur(12px) contrast(1.05) saturate(1.1);
+            box-shadow: 0 0 20px rgba(50, 30, 0, 0.15);
+        }
+        
+        /* Rust patch variations */
+        .rust-spot.variation-1 {
+            background: radial-gradient(
+                circle at 40% 40%, 
+                rgba(160, 82, 45, 0.7) 0%, 
+                rgba(139, 69, 19, 0.5) 40%, 
+                rgba(165, 42, 42, 0.3) 70%,
+                rgba(139, 69, 19, 0) 100%
+            );
+        }
+        
+        .rust-spot.variation-2 {
+            background: radial-gradient(
+                circle at 60% 60%, 
+                rgba(205, 133, 63, 0.7) 0%, 
+                rgba(160, 82, 45, 0.5) 30%, 
+                rgba(139, 69, 19, 0.3) 60%,
+                rgba(128, 70, 27, 0) 100%
+            );
+        }
+        
+        .rust-spot.variation-3 {
+            background: radial-gradient(
+                ellipse at 50% 50%, 
+                rgba(184, 115, 51, 0.7) 0%, 
+                rgba(139, 69, 19, 0.5) 35%, 
+                rgba(128, 70, 27, 0.3) 70%,
+                rgba(128, 70, 27, 0) 100%
+            );
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+
+        .rust-spot.variation-4 {
+            background: radial-gradient(
+                circle at 70% 30%, 
+                rgba(139, 69, 19, 0.7) 0%, 
+                rgba(165, 42, 42, 0.5) 25%, 
+                rgba(210, 105, 30, 0.3) 50%,
+                rgba(139, 69, 19, 0) 100%
+            );
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+
+        .rust-spot.variation-5 {
+            background: radial-gradient(
+                circle at 30% 70%, 
+                rgba(160, 82, 45, 0.7) 0%, 
+                rgba(139, 69, 19, 0.5) 35%, 
+                rgba(165, 42, 42, 0.3) 65%,
+                rgba(139, 69, 19, 0) 100%
+            );
+            border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+        }
+        
+        /* Growing animation */
+        @keyframes grow {
+            0% {
+                transform: scale(0.1);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* Spread animation */
+        @keyframes spread {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.5);
+            }
+        }
+        
+        /* Growing rust */
+        .rust-spot.growing {
+            animation: grow 4s forwards, spread 30s 4s forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Full screen background image -->
+    <div class="background"></div>
+    
+    <!-- Blowtorch image -->
+    <a href="index.html">
+        <img src="Assets/blowtorch.png" alt="Blowtorch" class="blowtorch">
+    </a>
+    
+    <!-- Interactive area to capture events -->
+    <div class="interactive-area" id="interactiveArea"></div>
+    
+    <!-- Rust overlay container -->
+    <div class="rust-container" id="rustContainer"></div>
+
+    <script>
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            const rustContainer = document.getElementById('rustContainer');
+            const interactiveArea = document.getElementById('interactiveArea');
+            let rustCount = 0;
+            const maxRustSpots = 100; // Reduced for more focused growth
+            
+            // Add rust spot where user hovers
+            interactiveArea.addEventListener('mousemove', throttle(createRustSpot, 300));
+            document.body.addEventListener('touchmove', handleTouchMove);
+            document.body.addEventListener('touchstart', handleTouchStart);
+            
+            // Handle touch events
+            function handleTouchMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                createRustSpot({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+            
+            function handleTouchStart(e) {
+                const touch = e.touches[0];
+                createRustSpot({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+            
+            // Function to create a rust spot at mouse/touch position
+            function createRustSpot(e) {
+                if (rustCount >= maxRustSpots) return;
+                
+                // Create a new rust spot
+                const rustSpot = document.createElement('div');
+                
+                // Randomize size
+                const size = Math.random() * 120 + 40; // Random size between 40px and 160px
+                
+                // Get mouse/touch position
+                const x = e.clientX - (size / 2);
+                const y = e.clientY - (size / 2);
+                
+                // Add classes and set position/size
+                rustSpot.className = 'rust-spot variation-' + Math.floor(Math.random() * 5 + 1);
+                rustSpot.style.left = x + 'px';
+                rustSpot.style.top = y + 'px';
+                rustSpot.style.width = size + 'px';
+                rustSpot.style.height = size + 'px';
+                
+                // Add some randomness to shape
+                if (Math.random() > 0.5) {
+                    const skewX = (Math.random() - 0.5) * 10;
+                    const skewY = (Math.random() - 0.5) * 10;
+                    rustSpot.style.transform = `skew(${skewX}deg, ${skewY}deg)`;
+                }
+                
+                // Add to container
+                rustContainer.appendChild(rustSpot);
+                rustCount++;
+                
+                // Start growing animation after a short delay
+                setTimeout(() => {
+                    rustSpot.classList.add('growing');
+                }, 100);
+            }
+            
+            // Throttle function to limit how often an event handler runs
+            function throttle(func, delay) {
+                let lastCall = 0;
+                return function(...args) {
+                    const now = new Date().getTime();
+                    if (now - lastCall < delay) {
+                        return;
+                    }
+                    lastCall = now;
+                    return func(...args);
+                };
+            }
+        });
+    </script>
+</body>
+</html> 
